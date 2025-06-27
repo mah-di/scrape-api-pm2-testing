@@ -1,18 +1,20 @@
 import { Browser, launch } from "puppeteer"
 import { anonymizeProxy } from "proxy-chain"
+import genericPool from "generic-pool"
 
 export default class Browsers {
-    extensionPath: string = "./extensions"
-    proxyUrl: string | null = null
-    plain: Browser|null = null
-    adblock: Browser|null = null
-    proxy: Browser|null = null
-    adblockProxy: Browser|null = null
+    extensionPath:          string = "./extensions"
+    proxyUrl:               string | null = null
+
+    plainBP:                genericPool.Pool<Browser>|null = null
+    adblockBP:              genericPool.Pool<Browser>|null = null
+    proxyBP:                genericPool.Pool<Browser>|null = null
+    adblockProxyBP:         genericPool.Pool<Browser>|null = null
 
     constructor(extensionPath: string) {
         this.extensionPath = extensionPath
         this.setProxyUrl()
-        this.setBrowsers()
+        this.setBrowserPools()
     }
 
     async setProxyUrl() {
@@ -20,11 +22,20 @@ export default class Browsers {
         this.proxyUrl = await anonymizeProxy(originalProxyUrl)
     }
 
-    async setBrowsers() {
-        this.plain = await this.chromePlain()
-        this.adblock = await this.chromeAdblock()
-        this.proxy = await this.chromeProxy()
-        this.adblockProxy = await this.chromeAdblockProxy()
+    async setBrowserPools() {
+        while ( !this.proxyUrl ) await new Promise( resolve => setTimeout( resolve, 200 ) )
+
+        this.setPool( 'plainBP', 'chromePlain' )
+        this.setPool( 'adblockBP', 'chromeAdblock' )
+        this.setPool( 'proxyBP', 'chromeProxy' )
+        this.setPool( 'adblockProxyBP', 'chromeAdblockProxy' )
+    }
+
+    setPool( poolName: string, functionName: string ) {
+        this[poolName] = genericPool.createPool( {
+            create: async () => await this[functionName](),
+            destroy: async ( browser ) => await browser.close()
+        }, { max: 5, min: 1 } )
     }
 
     async chromePlain() {
@@ -111,17 +122,31 @@ export default class Browsers {
     return browser
     }
 
-    async resolve(useProxy: boolean, blockAds: boolean) {
+    async acquire(useProxy: boolean, blockAds: boolean) {
         if ( useProxy && blockAds )
-            return this.adblockProxy
+            return await this.adblockProxyBP?.acquire()
 
         else if ( useProxy )
-            return this.proxy
+            return await this.proxyBP?.acquire()
 
         else if ( blockAds )
-            return this.adblock
+            return await this.adblockBP?.acquire()
 
         else
-            return this.plain
+            return await this.plainBP?.acquire()
+    }
+
+    async release(useProxy: boolean, blockAds: boolean, browser: Browser) {
+        if ( useProxy && blockAds )
+            await this.adblockProxyBP?.release(browser)
+
+        else if ( useProxy )
+            await this.proxyBP?.release(browser)
+
+        else if ( blockAds )
+            await this.adblockBP?.release(browser)
+
+        else
+            await this.plainBP?.release(browser)
     }
 }

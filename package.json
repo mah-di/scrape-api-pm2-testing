@@ -13,6 +13,7 @@
   "packageManager": "pnpm@10.11.0",
   "dependencies": {
     "express": "^5.1.0",
+    "generic-pool": "^3.9.0",
     "proxy-chain": "^2.5.9",
     "puppeteer": "^24.10.2"
   }
