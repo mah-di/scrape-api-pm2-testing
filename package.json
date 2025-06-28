@@ -14,6 +14,8 @@
   "dependencies": {
     "express": "^5.1.0",
     "generic-pool": "^3.9.0",
+    "keyv": "^5.3.4",
+    "keyv-file": "^5.1.2",
     "proxy-chain": "^2.5.9",
     "puppeteer": "^24.10.2"
   }
