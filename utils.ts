@@ -43,7 +43,7 @@ async function runCleanup( keyv: Keyv ) {
 
         console.log( `Cleared cache: ${i} files removed.` )
 
-        await new Promise( resolve => setTimeout( resolve, 10_000 ) )
+        await new Promise( resolve => setTimeout( resolve, 120_000 ) )
     }
 }
 

@@ -31,47 +31,53 @@ app.get( "/", async ( req, res ) => {
 } )
 
 app.get( "/html", async ( req, res ) => {
-    const url = req.query.url || "https://example.com"
-    const blockAds = req.query.block_ads
-    const useProxy = req.query.use_proxy
+    const { url, blockAds, useProxy } = req.query
 
-    let HTMLContent = await fetchHTML( url, keyv )
+    try {
+        if ( !url ) return res.status( 400 ).send( "No URL provided" )
 
-    if ( HTMLContent !== null )
-        return res.send( HTMLContent )
+        let HTMLContent = await fetchHTML( url, keyv )
 
-    const browser = await browsers.acquire( useProxy, blockAds )
+        if ( HTMLContent !== null )
+            return res.send( HTMLContent )
 
-    HTMLContent = await parseHTML( browser, url )
+        const browser = await browsers.acquire( useProxy, blockAds )
 
-    res.send( HTMLContent )
+        HTMLContent = await parseHTML( browser, url )
 
-    await cacheFile( url, HTMLContent, keyv, "html" )
+        res.send( HTMLContent )
 
-    await browsers.release( useProxy, blockAds, browser )
+        await cacheFile( url, HTMLContent, keyv, "html" )
+
+        await browsers.release( useProxy, blockAds, browser )
+    } catch ( error ) {
+        res.status( 500 ).send( "Something went wrong" )
+    }
 } )
 
 app.get( "/screenshot", async ( req, res ) => {
-    const url = req.query.url || "https://example.com"
-    const blockAds = req.query.block_ads
-    const useProxy = req.query.use_proxy
-    const width = Number( req.query.width ) || 1920
-    const height = Number( req.query.height ) || 1080
+    const { url, blockAds, useProxy, width, height } = req.query
 
-    const cachedFilepath = await fetchSS( url, keyv )
+    if ( !url ) return res.status( 400 ).send( "No URL provided" )
 
-    if ( cachedFilepath !== null )
-        return res.setHeader( "Content-Type", "image/png" ).sendFile( cachedFilepath )
+    try {
+        const cachedFilepath = await fetchSS( url, keyv )
 
-    const browser = await browsers.acquire( useProxy, blockAds )
+        if ( cachedFilepath !== null )
+            return res.setHeader( "Content-Type", "image/png" ).sendFile( cachedFilepath )
 
-    const ss = await parseSS( browser, url, width, height )
+        const browser = await browsers.acquire( useProxy, blockAds )
 
-    res.setHeader( "Content-Type", "image/png" ).send( ss )
+        const ss = await parseSS( browser, url, width, height )
 
-    await cacheFile( url, ss, keyv, "screenshot" )
+        res.setHeader( "Content-Type", "image/png" ).send( ss )
 
-    await browsers.release( useProxy, blockAds, browser )
+        await cacheFile( url, ss, keyv, "screenshot" )
+
+        await browsers.release( useProxy, blockAds, browser )
+    } catch ( error ) {
+        res.status( 500 ).send( "Something went wrong" )
+    }
 } )
 
 app.listen( port, () => {
