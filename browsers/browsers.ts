@@ -40,7 +40,7 @@ export default class Browsers {
 
     async chromePlain() {
         return await launch( {
-            headless: false,
+            headless: true,
             args: [
                 "--no-sandbox",
                 "--disable-setuid-sandbox"
@@ -50,7 +50,7 @@ export default class Browsers {
 
     async chromeAdblock() {
         const browser = await launch( {
-            headless: false,
+            headless: true,
             args: [
                 "--no-sandbox",
                 "--disable-setuid-sandbox",
@@ -81,7 +81,7 @@ export default class Browsers {
 
     async chromeProxy() {
         return await launch( {
-            headless: false,
+            headless: true,
             args: [
                 "--no-sandbox",
                 "--disable-setuid-sandbox",
@@ -92,7 +92,7 @@ export default class Browsers {
 
     async chromeAdblockProxy() {
     const browser = await launch( {
-        headless: false,
+        headless: true,
         args: [
             "--no-sandbox",
             "--disable-setuid-sandbox",

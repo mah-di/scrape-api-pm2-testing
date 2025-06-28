@@ -12,6 +12,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.11.0",
   "dependencies": {
+    "dotenv": "^17.0.0",
     "express": "^5.1.0",
     "generic-pool": "^3.9.0",
     "keyv": "^5.3.4",
