@@ -11,7 +11,7 @@ export default class Browsers {
     proxyBP:                genericPool.Pool<Browser>|null = null
     adblockProxyBP:         genericPool.Pool<Browser>|null = null
 
-    constructor(extensionPath: string) {
+    constructor( extensionPath: string ) {
         this.extensionPath = extensionPath
         this.setProxyUrl()
         this.setBrowserPools()
@@ -19,7 +19,7 @@ export default class Browsers {
 
     async setProxyUrl() {
         const originalProxyUrl = `http://${process.env.PROXY_USERNAME}:${process.env.PROXY_PASSWORD}@${process.env.PROXY_HOST}:${process.env.PROXY_PORT}`
-        this.proxyUrl = await anonymizeProxy(originalProxyUrl)
+        this.proxyUrl = await anonymizeProxy( originalProxyUrl )
     }
 
     async setBrowserPools() {
@@ -32,24 +32,24 @@ export default class Browsers {
     }
 
     setPool( poolName: string, functionName: string ) {
-        this[poolName] = genericPool.createPool( {
-            create: async () => await this[functionName](),
+        this[ poolName ] = genericPool.createPool( {
+            create: async () => await this[ functionName ](),
             destroy: async ( browser ) => await browser.close()
         }, { max: 5, min: 1 } )
     }
 
     async chromePlain() {
-        return await launch({
+        return await launch( {
             headless: false,
             args: [
                 "--no-sandbox",
                 "--disable-setuid-sandbox"
             ]
-        })
+        } )
     }
 
     async chromeAdblock() {
-        const browser = await launch({
+        const browser = await launch( {
             headless: false,
             args: [
                 "--no-sandbox",
@@ -57,41 +57,41 @@ export default class Browsers {
                 `--disable-extensions-except=${this.extensionPath}`,
                 `--load-extensions=${this.extensionPath}`
             ]
-        })
+        } )
 
         while ( true ) {
             const adblockPage = (
                 await browser.pages()
-                    .then(pages =>
+                    .then( pages =>
                         pages
-                            .filter(page => page.url().startsWith( 'https://welcome.adblockplus.org/' ))
+                            .filter( page => page.url().startsWith( 'https://welcome.adblockplus.org/' ) )
                     )
-                )[0]
+                )[ 0 ]
 
             if ( adblockPage ) {
                 adblockPage.close()
                 break
             }
 
-            await new Promise(resolve => setTimeout(resolve, 1000))
+            await new Promise( resolve => setTimeout( resolve, 1000 ) )
         }
 
         return browser
     }
 
     async chromeProxy() {
-        return await launch({
+        return await launch( {
             headless: false,
             args: [
                 "--no-sandbox",
                 "--disable-setuid-sandbox",
                 `--proxy-server=${this.proxyUrl}`
             ]
-        })
+        } )
     }
 
     async chromeAdblockProxy() {
-    const browser = await launch({
+    const browser = await launch( {
         headless: false,
         args: [
             "--no-sandbox",
@@ -100,29 +100,29 @@ export default class Browsers {
             `--load-extensions=${this.extensionPath}`,
             `--proxy-server=${this.proxyUrl}`
         ]
-    })
+    } )
 
     while ( true ) {
         const adblockPage = (
             await browser.pages()
-                .then(pages =>
+                .then( pages =>
                     pages
-                        .filter(page => page.url().startsWith( 'https://welcome.adblockplus.org/' ))
+                        .filter( page => page.url().startsWith( 'https://welcome.adblockplus.org/' ) )
                 )
-            )[0]
+            )[ 0 ]
 
         if ( adblockPage ) {
             adblockPage.close()
             break
         }
 
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        await new Promise( resolve => setTimeout( resolve, 1000 ) )
     }
 
     return browser
     }
 
-    async acquire(useProxy: boolean, blockAds: boolean) {
+    async acquire( useProxy: boolean, blockAds: boolean ) {
         if ( useProxy && blockAds )
             return await this.adblockProxyBP?.acquire()
 
@@ -136,17 +136,17 @@ export default class Browsers {
             return await this.plainBP?.acquire()
     }
 
-    async release(useProxy: boolean, blockAds: boolean, browser: Browser) {
+    async release( useProxy: boolean, blockAds: boolean, browser: Browser ) {
         if ( useProxy && blockAds )
-            await this.adblockProxyBP?.release(browser)
+            await this.adblockProxyBP?.release( browser )
 
         else if ( useProxy )
-            await this.proxyBP?.release(browser)
+            await this.proxyBP?.release( browser )
 
         else if ( blockAds )
-            await this.adblockBP?.release(browser)
+            await this.adblockBP?.release( browser )
 
         else
-            await this.plainBP?.release(browser)
+            await this.plainBP?.release( browser )
     }
 }
