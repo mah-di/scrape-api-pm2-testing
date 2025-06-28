@@ -51,12 +51,15 @@ app.get( "/html", async ( req, res ) => {
 
         await browsers.release( useProxy, blockAds, browser )
     } catch ( error ) {
+        console.log(error)
         res.status( 500 ).send( "Something went wrong" )
     }
 } )
 
 app.get( "/screenshot", async ( req, res ) => {
-    const { url, blockAds, useProxy, width, height } = req.query
+    const { url, blockAds, useProxy } = req.query
+    const width = Number( req.query.width ) || 1920
+    const height = Number( req.query.height ) || 1080
 
     if ( !url ) return res.status( 400 ).send( "No URL provided" )
 
@@ -77,6 +80,7 @@ app.get( "/screenshot", async ( req, res ) => {
         await browsers.release( useProxy, blockAds, browser )
     } catch ( error ) {
         res.status( 500 ).send( "Something went wrong" )
+        console.log(error)
     }
 } )
 
