@@ -15,7 +15,7 @@ async function parseSS( browser: Browser, url: string, width: number, height: nu
     await page.bringToFront()
     await page.goto( url, { waitUntil: "networkidle2", timeout: 60_000 } )
     await page.setViewport( { width, height } )
-    const ss = await page.screenshot()
+    const ss = await page.screenshot( { fullPage: true } )
     await page.close()
 
     return ss
